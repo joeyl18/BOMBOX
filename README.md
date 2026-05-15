@@ -1,0 +1,2 @@
+# OxyMetaG: Bumblebee Gut Microbiome Oxygen Tolerance Analysis
+The general goal of the project will be to find a relationship that explains the differences between bumblebees with different levels of oxygen tolerance. 
