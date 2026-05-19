@@ -39,18 +39,20 @@ The pipeline uses the following bioinformatic tools:
 ## Contributors
 - Joey lin ---- Bioinformatic analysis, R visualization, Interpretation
 ## Citations
-OxyMetaG
+OxyMetaG:
 
 Bueno de Mesquita, C.P., Stallard-Olivera, E., Fierer, N. (2025). 
 Quantifying the oxygen preferences of bacterial communities using a 
 metagenome-based approach.
 
-Kraken2 and KrakenTools
+Kraken2 and KrakenTools:
+
 Lu, J., Rincon, N., Wood, D.E. et al. Metagenome analysis using the Kraken 
 software suite. Nat Protoc 17, 2815–2839 (2022). 
 https://doi.org/10.1038/s41596-022-00738-y
 
-DIAMOND
+DIAMOND:
+
 Buchfink, B., Xie, C. & Huson, D. Fast and sensitive protein alignment using 
 DIAMOND. Nat Methods 12, 59–60 (2015). 
 https://doi.org/10.1038/nmeth.3176
