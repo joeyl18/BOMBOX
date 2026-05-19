@@ -25,7 +25,7 @@ The pipeline uses the following bioinformatic tools:
 ### Extraction:
 ### Alignment:
 - [DIAMOND](https://github.com/bbuchfink/diamond)
-diamond/2.0.15
+(diamond/2.0.15)
 
 ## Input Data
 - Metagenomic FASTQ files from Bombus gut samples 
