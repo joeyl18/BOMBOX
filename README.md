@@ -21,7 +21,7 @@ Visualize data from table consisting sample ID (one bumblebee), Aerobic/Anaerobi
 ## Requirements
 The pipeline uses the following bioinformatic tools:
 ### Classification:
-kraken2/2.1.2  
+- [kraken2](https://github.com/DerrickWood/kraken2) (kraken2/2.1.2)  
 ### Extraction:
 ### Alignment:
 diamond/2.0.15
