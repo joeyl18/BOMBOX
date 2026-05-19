@@ -24,6 +24,7 @@ The pipeline uses the following bioinformatic tools:
 - [kraken2](https://github.com/DerrickWood/kraken2) (kraken2/2.1.2)  
 ### Extraction:
 ### Alignment:
+- [DIAMOND](https://github.com/bbuchfink/diamond)
 diamond/2.0.15
 
 ## Input Data
