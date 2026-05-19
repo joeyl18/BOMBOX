@@ -4,4 +4,8 @@ Metagenomic analysis of bumblebee gut microbiome. The general goal of the projec
 ## 
 
 ## Bioinformatic Pipeline
-Using unmapped reads that are cleaned and host-filtered,we download the 
+The pipeline consists of 5 major steps
+
+## Computing Environment
+
+## Requirements
