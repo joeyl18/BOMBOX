@@ -33,6 +33,7 @@ Visualize data from table consisting sample ID (one bumblebee), Aerobic/Anaerobi
 - Joey lin ---- Bioinformatic analysis, R visualization, Interpretation
 ## Citations
 OxyMetaG
+
 Bueno de Mesquita, C.P., Stallard-Olivera, E., Fierer, N. (2025). 
 Quantifying the oxygen preferences of bacterial communities using a 
 metagenome-based approach.
