@@ -18,6 +18,11 @@ Visualize data from table consisting sample ID (one bumblebee), Aerobic/Anaerobi
 
 ## Computing Environment
 
+The first 3 steps of the pipeline is completed in the HPC3 cluster of the University of California, Irvine. 
+
+Step 2: KrakenTools involves running Python scripts in the HPC3 cluster.
+
+Steps 4 and 5 are done in R
 ## Requirements
 The pipeline uses the following bioinformatic tools:
 ### Classification:
