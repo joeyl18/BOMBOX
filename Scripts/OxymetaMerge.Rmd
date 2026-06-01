@@ -1,0 +1,49 @@
+---
+title: "OxyMetaG_Merge"
+author: "Joey Lin"
+date: "2026-06-01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Step 1: Load the data 
+```{r}
+library(tidyverse)
+
+oxymetag <- read_tsv("per_aerobe_predictions.tsv")
+metadata <- read_csv("bombus_sample_metadata.csv")
+```
+## Step 2: Combine R1 and R2 into the same Sample ID
+```{r}
+oxymetag <- oxymetag %>%
+  mutate(sample_id = str_remove(SampleID, "_R[12]_nonhost"))
+```
+## Step 3: Average R1 and R2 for each Sample ID
+```{r}
+oxymetag_avg <- oxymetag %>%
+  group_by(sample_id) %>%
+  summarise(
+    ratio = mean(ratio, na.rm = TRUE),
+    aerobe_pfams = mean(aerobe_pfams, na.rm = TRUE),
+    anaerobe_pfams = mean(anaerobe_pfams, na.rm = TRUE),
+    Oxygen_level = mean(Oxygen_level, na.rm = TRUE)
+  )
+```
+
+## Step 4: Merge aerobe predictions data with metadata
+```{r}
+merged <- oxymetag_avg %>%
+  left_join(metadata, by = "sample_id")
+```
+## Step 5: Check
+```{r}
+head(merged)
+nrow(merged)
+```
+## Step 6: Export
+```{r}
+write_csv(merged, "merged_oxymetag.csv")
+```
+
