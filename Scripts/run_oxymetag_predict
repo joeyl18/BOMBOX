@@ -1,0 +1,11 @@
+*no slurm job required*
+
+mkdir -p /pub/joeyl18/BOMBOX/diamond_flat
+find /pub/joeyl18/BOMBOX/diamond_output/ -name "*_diamond.tsv" -exec cp {} /pub/joeyl18/BOMBOX/diamond_flat/ \;
+ls /pub/joeyl18/BOMBOX/diamond_flat/ | wc -l
+
+oxymetag predict \
+    -i /pub/joeyl18/BOMBOX/diamond_flat \
+    -o /pub/joeyl18/BOMBOX/per_aerobe_predictions.tsv \
+    -m modern \
+    -t 8
