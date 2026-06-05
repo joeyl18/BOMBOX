@@ -1,0 +1,82 @@
+---
+title: "OxyMetaG_Graphs"
+author: "Joey Lin"
+date: "2026-06-05"
+output: html_document
+---
+Today, I will try to make some graphs for the oxymetag data i have on the bumblebees. My first graph will be analyzing the oxygen level of bumblebee in Laguna Beach from March to August. I hypothesize that the level of oxygen will increase as the lifecycle of the bumblebee.
+```{r}
+library(tidyverse)
+merged <- read_csv("Data/merged_oxymetag.csv")
+```
+```{r}
+laguna <- merged %>%
+  filter(year == 2022) %>%
+  mutate(date_full = as.Date(paste0("2022", date), format = "%Y%m%d"))
+
+ggplot(laguna, aes(x = date_full, y = Oxygen_level)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "loess", se = TRUE) +
+  labs(
+    title = "Gut Microbiome Oxygen Level Over Time",
+    subtitle = "Bombus samples from Laguna Beach Botanical Garden (2022)",
+    x = "Date",
+    y = "Predicted Oxygen Level (%)"
+  ) +
+  theme_minimal()
+# Convert date to numeric for regression
+laguna <- laguna %>%
+  mutate(date_numeric = as.numeric(date_full))
+
+# Run linear regression
+model <- lm(Oxygen_level ~ date_numeric, data = laguna)
+summary(model)
+
+# Add log transformed date
+laguna <- laguna %>%
+  mutate(date_log = log(date_numeric))
+
+# Run log regression
+model_log <- lm(Oxygen_level ~ date_log, data = laguna)
+summary(model_log)
+```
+Now, I will do regression of elevation oxygen and elevation aerobe pfams
+```{r}
+ggplot(merged, aes(x = elev_masl, y = Oxygen_level)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(
+    title = "Elevation vs Oxygen Level",
+    x = "Elevation (masl)",
+    y = "Oxygen Level"
+  ) +
+  theme_minimal()
+
+# Linear regression
+model_linear <- lm(Oxygen_level ~ elev_masl, data = merged)
+summary(model_linear)
+
+# Log regression
+model_log <- lm(aerobe_pfams ~ log(Oxygen_level), data = merged)
+summary(model_log)
+```
+Try multiple regression to increase r^2
+```{r}
+model_multi <- lm(Oxygen_level ~ elev_masl + species_id + country, data = merged)
+summary(model_multi)
+```
+Plot species vs Oxygen level
+```{r}
+ggplot(merged, aes(x = reorder(species_id, Oxygen_level, median, na.rm = TRUE), 
+                   y = Oxygen_level, fill = country)) +
+  geom_boxplot() +
+  labs(
+    title = "Gut Microbiome Oxygen Level by Species",
+    x = "Species",
+    y = "Predicted Oxygen Level (%)",
+    fill = "Country"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
