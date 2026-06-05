@@ -67,7 +67,7 @@ summary(model_linear)
 model_log <- lm(aerobe_pfams ~ log(Oxygen_level), data = merged)
 summary(model_log)
 ```
-Result: elevation does not seem to explain the variation of oxygen levels in bumblebees
+Result: elevation does not seem to explain the variation of oxygen levels in bumblebees (low p value but low r^2 value).
 
 #Try multiple regression to increase r^2
 ```{r}
@@ -88,4 +88,4 @@ ggplot(merged, aes(x = reorder(species_id, Oxygen_level, median, na.rm = TRUE),
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-Results: Species type seems to explain more variation (adjusted r2 = 0.4485)
+Results: Species type seems to explain more variation (adjusted r2 = 0.4485). When we isolate elevation from other factors, it does not seem statistically signifant (r^2 = 0.99).
