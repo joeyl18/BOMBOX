@@ -80,7 +80,7 @@ print(elevation_oxygen_plot)
 # Optional: Uncomment the line below to save the graph directly to your computer as a high-res image
 # ggsave("elevation_vs_oxygen_plot.png", plot = elevation_oxygen_plot, width = 10, height = 6, dpi = 300)
 ```
-I want a graph with species that have at least 10 samples
+I want a graph with species that have at least 5 samples
 ```{r}
 # 4. Filter and plot simultaneously without changing the original file
 metadata %>%
@@ -102,7 +102,7 @@ metadata %>%
   scale_color_manual(values = species_palette) +
   labs(
     title = "Elevation vs. Oxygen Level by Bumblebee Species",
-    subtitle = "Excluding species with a sample size of less than 10",
+    subtitle = "Excluding species with a sample size of less than 5",
     x = "Elevation (meters above sea level)",
     y = "Oxygen Level (%)",
     color = "Species ID"
@@ -117,4 +117,84 @@ metadata %>%
     panel.grid.minor = element_blank()
   )
 ```
+Using the phylogeny, I will now split the species into three main groups with different shapes assigned. 
+```{r}
 
+# 3. Comprehensive color palette covering all 22 species
+species_palette <- c(
+  "rubicundus"            = "#AD2632",
+  "funebris"              = "#D36800",
+  "hortulanus"            = "#BC8700",
+  "robustus"              = "#DEBA00",
+  "rufocinctus"           = "#E6625F",
+  "morrisoni"             = "#FF855D",
+  "griseocollis"          = "#FEA124",
+  "vandykei"              = "#5951BE",
+  "flavifrons_dimidiatus"  = "#6D37A0",
+  "flavifrons_flavifrons"  = "#4D218C",
+  "bifarius"              = "#B54C9B",
+  "bifarius_nearcticus"   = "#DA65AA",
+  "sylvicola"             = "#9A54BA",
+  "huntii"                = "#862A85",
+  "mixtus"                = "#CD4E77",
+  "vosnesenskii"          = "#7C64D4",
+  "fervidus"              = "#6E9887",
+  "pensylvanicus"         = "#00A59E",
+  "sonorus"               = "#006674",
+  "atratus"               = "#007FB1",
+  "insularis"             = "#67C864",
+  "nevadensis"            = "#A4A4A4"
+)
+
+# 4. Map shapes globally to categorical text groups for the legend layout
+# 17 = Triangle, 19 = Circle, 15 = Square
+shape_palette <- c(
+  "morrisoni, griseocollis, nevadensis" = 17,
+  "vosnesenskii & other species"         = 19,
+  "fervidus, pensylvanicus, sonorus, atratus" = 15
+)
+
+# 5. Process data and plot on a single set of axes
+metadata %>%
+  # Clean out entries missing coordinates or oxygen readings
+  filter(!is.na(elev_masl), !is.na(Oxygen_level)) %>%
+  
+  # Categorize each species into one of the 3 legend shape labels on the fly
+  mutate(shape_group = case_when(
+    species_id %in% c("morrisoni", "griseocollis", "nevadensis") ~ "morrisoni, griseocollis, nevadensis",
+    species_id %in% c("fervidus", "pensylvanicus", "sonorus", "atratus") ~ "fervidus, pensylvanicus, sonorus, atratus",
+    TRUE ~ "vosnesenskii & other species"
+  )) %>%
+  
+  # Map color to species_id, but map shape to the broader text label group
+  ggplot(aes(x = elev_masl, y = Oxygen_level, color = species_id, shape = shape_group)) +
+  
+  # Scatter points layer (alpha adds light transparency for overlapping points)
+  geom_point(size = 3, alpha = 0.75) +
+  
+  # Explicitly map the color palette and custom shape assignments
+  scale_color_manual(values = species_palette) +
+  scale_shape_manual(values = shape_palette) +
+  
+  # Titles and layout labels
+  labs(
+    title = "Elevation vs. Oxygen Level across Bumblebee Species",
+    x = "Elevation (meters above sea level)",
+    y = "Oxygen Level (%)",
+    shape = "Lineage Group"
+  ) +
+  
+  # Modern theme styling
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5, margin = margin(b = 15)),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 9),
+    panel.grid.minor = element_blank()
+  ) +
+  
+  # CRITICAL: Turn off the color legend entirely, keeping only the shape guide
+  guides(color = "none")
+```
