@@ -198,3 +198,36 @@ metadata %>%
   # CRITICAL: Turn off the color legend entirely, keeping only the shape guide
   guides(color = "none")
 ```
+Now, I will run a regression to see if three groups behave differently.
+```{r}
+#install.packages("car")
+library(car)
+
+# 2. Load and group your dataset
+analysis_data <- read_csv("../Data/merged_oxymetag.csv") %>%
+  filter(!is.na(elev_masl), !is.na(Oxygen_level)) %>%
+  mutate(shape_group = case_when(
+    species_id %in% c("morrisoni", "griseocollis", "nevadensis") ~ "Triangles",
+    species_id %in% c("fervidus", "pensylvanicus", "sonorus", "atratus") ~ "Squares",
+    TRUE ~ "Circles"
+  )) %>%
+  # Convert shape_group to a factor so R handles the categories correctly
+  mutate(shape_group = as.factor(shape_group))
+
+# 3. Fit the full interaction model
+# The '*' tells R to evaluate elev_masl, shape_group, AND their interaction
+interaction_model <- lm(Oxygen_level ~ elev_masl * shape_group, data = analysis_data)
+
+# 4. Print the overall significance table (ANOVA)
+cat("==================================================\n")
+cat(" OVERALL SIGNIFICANCE TEST (ANOVA Table)\n")
+cat("==================================================\n")
+print(Anova(interaction_model, type = "II"))
+
+# 5. Print the detailed coefficient breakdown
+cat("\n==================================================\n")
+cat(" DETAILED COEFFICIENTS AND INTERACTION BREAKDOWN\n")
+cat("==================================================\n")
+print(summary(interaction_model))
+```
+This is my first time running ANOVA. According to Gemini, "While bumblebee lineage groups differ significantly in their overall baseline oxygen levels ($p = 0.028$), there is no statistically significant difference in how their oxygen profiles respond to elevation change (interaction $p = 0.311$)."
