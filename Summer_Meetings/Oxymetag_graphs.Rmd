@@ -4,11 +4,15 @@ author: "Joey Lin"
 date: "2026-06-05"
 output: html_document
 ---
+
 Today, I will try to make some graphs for the oxymetag data i have on the bumblebees. My first graph will be analyzing the oxygen level of bumblebee in Laguna Beach from March to August. I hypothesize that the level of oxygen will increase as the lifecycle of the bumblebee.
+
 ```{r}
 library(tidyverse)
-merged <- read_csv("Data/merged_oxymetag.csv")
+library(here)
+merged <- read_csv("../Data/merged_oxymetag.csv")
 ```
+
 ```{r}
 laguna <- merged %>%
   filter(year == 2022) %>%
@@ -25,7 +29,9 @@ ggplot(laguna, aes(x = date_full, y = Oxygen_level)) +
   ) +
   theme_minimal()
 ```
+
 Running Regression to check significance.
+
 ```{r}
 # Convert date to numeric for regression
 laguna <- laguna %>%
@@ -47,7 +53,9 @@ summary(model_log)
 Results: not signifciant
 
 # Elevation and Oxygen Level
+
 Now, I will do regression of elevation oxygen and elevation aerobe pfams
+
 ```{r}
 ggplot(merged, aes(x = elev_masl, y = Oxygen_level)) +
   geom_point(size = 3) +
@@ -67,14 +75,18 @@ summary(model_linear)
 model_log <- lm(aerobe_pfams ~ log(Oxygen_level), data = merged)
 summary(model_log)
 ```
-Result: elevation does not seem to explain the variation of oxygen levels in bumblebees (low p value but low r^2 value).
 
-#Try multiple regression to increase r^2
+Result: elevation does not seem to explain the variation of oxygen levels in bumblebees (low p value but low r\^2 value).
+
+#Try multiple regression to increase r\^2
+
 ```{r}
 model_multi <- lm(Oxygen_level ~ elev_masl + species_id + country, data = merged)
 summary(model_multi)
 ```
+
 Plot species vs Oxygen level
+
 ```{r}
 ggplot(merged, aes(x = reorder(species_id, Oxygen_level, median, na.rm = TRUE), 
                    y = Oxygen_level, fill = country)) +
@@ -88,4 +100,5 @@ ggplot(merged, aes(x = reorder(species_id, Oxygen_level, median, na.rm = TRUE),
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-Results: Species type seems to explain more variation (adjusted r2 = 0.4485). When we isolate elevation from other factors, it does not seem statistically signifant (r^2 = 0.99).
+
+Results: Species type seems to explain more variation (adjusted r2 = 0.4485). When we isolate elevation from other factors, it does not seem statistically signifant (r\^2 = 0.99).
