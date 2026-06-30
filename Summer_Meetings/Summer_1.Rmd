@@ -231,3 +231,5 @@ cat("==================================================\n")
 print(summary(interaction_model))
 ```
 This is my first time running ANOVA. According to Gemini, "While bumblebee lineage groups differ significantly in their overall baseline oxygen levels ($p = 0.028$), there is no statistically significant difference in how their oxygen profiles respond to elevation change (interaction $p = 0.311$)."
+**Conclusion**
+Next time, I will learn what PGLS is and how my analysis will differ using PGLS than what I know now.
