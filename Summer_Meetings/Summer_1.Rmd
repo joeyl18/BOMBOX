@@ -1,0 +1,120 @@
+---
+title: "Summer_1"
+author: "Joey Lin"
+date: "2026-06-30"
+output: html_document
+---
+
+Today, I will be incorporating the color palette Nickole gave me into my graphs. 
+First, load the data.
+```{r}
+library(tidyverse)
+library(here)
+metadata <- read_csv("../Data/merged_oxymetag.csv")
+```
+Lets assign the colors to each species
+```{r}
+species_palette <- c(
+  "rubicundus"            = "#AD2632",
+  "funebris"              = "#D36800",
+  "hortulanus"            = "#BC8700",
+  "robustus"              = "#DEBA00",
+  "rufocinctus"           = "#E6625F",
+  "morrisoni"             = "#FF855D",
+  "griseocollis"          = "#FEA124",
+  "vandykei"              = "#5951BE",
+  "flavifrons_dimidiatus"  = "#6D37A0",
+  "flavifrons_flavifrons"  = "#4D218C",
+  "bifarius"              = "#B54C9B",
+  "bifarius_nearcticus"   = "#DA65AA",
+  "sylvicola"             = "#9A54BA",
+  "huntii"                = "#862A85",
+  "mixtus"                = "#CD4E77",
+  "vosnesenskii"          = "#7C64D4",
+  "fervidus"              = "#6E9887",
+  "pensylvanicus"         = "#00A59E",
+  "sonorus"               = "#006674",
+  "atratus"               = "#007FB1",
+  "insularis"             = "#67C864",
+  "nevadensis"            = "#A4A4A4"
+)
+```
+
+
+The first graph I will make is to create an elevation and oxygen level graph with the new color palette. 
+```{r}
+# 4. Generate the Elevation vs Oxygen Level Scatter Plot
+elevation_oxygen_plot <- metadata %>%
+  # Filter out rows missing elevation or oxygen measurements to keep the graph clean
+  filter(!is.na(elev_masl), !is.na(Oxygen_level)) %>%
+  
+  ggplot(aes(x = elev_masl, y = Oxygen_level, color = species_id)) +
+  
+  # Add points with slightly larger size and subtle transparency to handle overlapping points
+  geom_point(size = 3, alpha = 0.8) +
+  
+  # Apply your custom manual color scale mapping
+  scale_color_manual(values = species_palette) +
+  
+  # Set labels and titles
+  labs(
+    title = "Elevation vs. Oxygen Level by Bumblebee Species",
+    x = "Elevation (meters above sea level)",
+    y = "Oxygen Level (%)",
+    color = "Species ID"
+  ) +
+  
+  # Clean, modern minimalist theme
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5, margin = margin(b = 15)),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    legend.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank() # Cleans up background grid line clutter
+  )
+
+# 5. Display the plot in your RStudio Plots panel
+print(elevation_oxygen_plot)
+
+# Optional: Uncomment the line below to save the graph directly to your computer as a high-res image
+# ggsave("elevation_vs_oxygen_plot.png", plot = elevation_oxygen_plot, width = 10, height = 6, dpi = 300)
+```
+I want a graph with species that have at least 10 samples
+```{r}
+# 4. Filter and plot simultaneously without changing the original file
+metadata %>%
+  # Remove rows missing elevation or oxygen measurements
+  filter(!is.na(elev_masl), !is.na(Oxygen_level)) %>%
+  
+  # Temporarily group by species to count them
+  group_by(species_id) %>%       
+  
+  # EXCLUDE species from the graph if they have fewer than 10 samples
+  filter(n() >= 5) %>%          
+  
+  # Ungroup so ggplot handles the data properly
+  ungroup() %>%                  
+  
+  # Send this filtered subset straight to the graph
+  ggplot(aes(x = elev_masl, y = Oxygen_level, color = species_id)) +
+  geom_point(size = 3, alpha = 0.8) +
+  scale_color_manual(values = species_palette) +
+  labs(
+    title = "Elevation vs. Oxygen Level by Bumblebee Species",
+    subtitle = "Excluding species with a sample size of less than 10",
+    x = "Elevation (meters above sea level)",
+    y = "Oxygen Level (%)",
+    color = "Species ID"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 10, color = "gray40", hjust = 0.5, margin = margin(b = 15)),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    legend.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  )
+```
+
