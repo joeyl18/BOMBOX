@@ -1,0 +1,162 @@
+---
+title: "Summer_2"
+author: "Joey Lin"
+date: "2026-07-19"
+output: html_document
+---
+# Goals:
+1. Elevation vs Oxygen level by species with sample size of at least 3 per species (follow up from summer    1 plot with n>=5)
+2. Boxplot of oxygen level vs species/subgenus (include all points in box) using smplot
+3. Explore if pham ratios are consistent across species
+4. Boxplot of queens vs workers/caste (male/female) *intraspecies (facet by species)*
+
+Load the data
+```{r}
+library(tidyverse)
+library(here)
+metadata <- read_csv("../Data/merged_oxymetag.csv")
+```
+
+## 1. Elevation vs Oxygen level by species (n>=3)
+*assign color palette for species*
+```{r}
+species_palette <- c(
+  "rubicundus"            = "#AD2632",
+  "funebris"              = "#D36800",
+  "hortulanus"            = "#BC8700",
+  "robustus"              = "#DEBA00",
+  "rufocinctus"           = "#E6625F",
+  "morrisoni"             = "#FF855D",
+  "griseocollis"          = "#FEA124",
+  "vandykei"              = "#5951BE",
+  "flavifrons_dimidiatus"  = "#6D37A0",
+  "flavifrons_flavifrons"  = "#4D218C",
+  "bifarius"              = "#B54C9B",
+  "bifarius_nearcticus"   = "#DA65AA",
+  "sylvicola"             = "#9A54BA",
+  "huntii"                = "#862A85",
+  "mixtus"                = "#CD4E77",
+  "vosnesenskii"          = "#7C64D4",
+  "fervidus"              = "#6E9887",
+  "pensylvanicus"         = "#00A59E",
+  "sonorus"               = "#006674",
+  "atratus"               = "#007FB1",
+  "insularis"             = "#67C864",
+  "nevadensis"            = "#A4A4A4"
+)
+```
+*generate the graph*
+```{r}
+metadata %>%
+  # Remove rows missing elevation or oxygen measurements
+  filter(!is.na(elev_masl), !is.na(Oxygen_level)) %>%
+  
+  # Temporarily group by species to count them
+  group_by(species_id) %>%       
+  
+  # EXCLUDE species from the graph if they have fewer than 10 samples
+  filter(n() >= 3) %>%          
+  
+  # Ungroup so ggplot handles the data properly
+  ungroup() %>%                  
+  
+  # Send this filtered subset straight to the graph
+  ggplot(aes(x = elev_masl, y = Oxygen_level, color = species_id)) +
+  geom_point(size = 3, alpha = 0.8) +
+  scale_color_manual(values = species_palette) +
+  labs(
+    title = "Elevation vs. Oxygen Level by Bumblebee Species",
+    subtitle = "Excluding species with a sample size of less than 5",
+    x = "Elevation (meters above sea level)",
+    y = "Oxygen Level (%)",
+    color = "Species ID"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(size = 10, color = "gray40", hjust = 0.5, margin = margin(b = 15)),
+    axis.title.x = element_text(margin = margin(t = 10)),
+    axis.title.y = element_text(margin = margin(r = 10)),
+    legend.title = element_text(face = "bold"),
+    panel.grid.minor = element_blank()
+  ) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed")
+```
+*Check if the slope is significantly negative*
+```{r}
+model_elev <- lm(Oxygen_level ~ elev_masl, data = metadata %>%
+  filter(!is.na(elev_masl), !is.na(Oxygen_level)) %>%
+  group_by(species_id) %>%
+  filter(n() >= 3) %>%
+  ungroup())
+
+summary(model_elev)
+```
+The slope is statistically significantly negative at (alpha=0.05). The R^2 is small. Lets try to add speices as a control variable in the regression:
+```{r}
+model_species <- lm(Oxygen_level ~ elev_masl + species_id, data = metadata %>%
+  filter(!is.na(elev_masl), !is.na(Oxygen_level)) %>%
+  group_by(species_id) %>%
+  filter(n() >= 3) %>%
+  ungroup())
+
+summary(model_species)
+```
+### Conclusion: Elevation is no longer significant after controlling for species. However, speices is highly significanty and accounts for way higher variation (R^2 = 0.529). One concern is that species can be highly correlated with elevation, causing my multiple regression test to be unrelaible (multicollinearity). 
+
+## 2. Boxplot of Oxygen level vs species/subgenus (include all data points)
+*install smplot2*
+install.packages("smplot2")
+```{r}
+library (smplot2)
+metadata %>%
+  filter(!is.na(Oxygen_level), !is.na(species_id)) %>%
+  ggplot(aes(x = species_id, y = Oxygen_level, color = species_id)) +
+  sm_boxplot() +
+  labs(
+    title = "Gut Microbiome Oxygen Level by Species",
+    x = "Species",
+    y = "Oxygen Level (%)"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none",
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
+```
+*now do one with subgenus (color by country)*
+```{r}
+metadata %>%
+  filter(!is.na(Oxygen_level)) %>%
+  ggplot(aes(x = subgenus, y = Oxygen_level, color = country)) +
+  sm_boxplot() +
+  labs(
+    title = "Gut Microbiome Oxygen Level by Subgenus",
+    x = "Subgenus",
+    y = "Oxygen Level (%)",
+    color = "Country"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
+```
+Now, I will run a statistical test comparing subgenus
+```{r}
+model_subgenus <- aov(Oxygen_level ~ subgenus, data = metadata %>% 
+                        filter(!is.na(Oxygen_level), !is.na(subgenus)))
+summary(model_subgenus)
+
+# Post-hoc test to see which subgenera differ
+TukeyHSD(model_subgenus)
+```
+### Conclusion: Thoracobombus (columbian) have significantly lower oxygen levels than US subgenra. Cullumanobombus (columbian) also has statistically significant lower oxygen levels than Pyrobombus.
+```{r}
+library(car)
+vif(model_species)
+```
+### Concern: I had a question about multicollinearity between species and elevation. Claude told me to run the Vif test. Conculsion: there is no pure mathematical collinearity problem. Maybe run PGLS just to make sure?
+
+## 3. Pham ratio consistency
