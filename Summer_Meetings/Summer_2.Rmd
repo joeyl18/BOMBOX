@@ -103,6 +103,16 @@ model_species <- lm(Oxygen_level ~ elev_masl + species_id, data = metadata %>%
 summary(model_species)
 ```
 ### Conclusion: Elevation is no longer significant after controlling for species. However, speices is highly significanty and accounts for way higher variation (R^2 = 0.529). One concern is that species can be highly correlated with elevation, causing my multiple regression test to be unrelaible (multicollinearity). 
+### Concern: Maybe month can come into play here. Lets check:
+```{r}
+metadata <- metadata %>%
+  mutate(month = as.integer(substr(date, 1, 2)))
+model_month_species <- lm(Oxygen_level ~ month + species_id, data = metadata %>%
+  filter(!is.na(Oxygen_level), !is.na(month), !is.na(species_id)))
+
+summary(model_month_species)
+```
+Month is not associated with oxygen level after controlling for species. 
 
 ## 2. Boxplot of Oxygen level vs species/subgenus (include all data points)
 *install smplot2*
@@ -159,4 +169,89 @@ vif(model_species)
 ```
 ### Concern: I had a question about multicollinearity between species and elevation. Claude told me to run the Vif test. Conculsion: there is no pure mathematical collinearity problem. Maybe run PGLS just to make sure?
 
+
 ## 3. Pham ratio consistency
+```{r}
+metadata %>%
+  filter(!is.na(ratio), !is.na(species_id)) %>%
+  group_by(species_id) %>%
+  filter(n() >= 3) %>%
+  ungroup() %>%
+  ggplot(aes(x = reorder(species_id, ratio, median, na.rm = TRUE), 
+             y = ratio, color = species_id)) +
+  sm_boxplot(outlier.shape = NA) +
+  coord_cartesian(ylim = c(0, 100)) +
+  labs(
+    title = "Pfam Ratio by Bumblebee Species",
+    subtitle = "Excluding species with fewer than 3 samples",
+    x = "Species",
+    y = "Aerobe:Anaerobe Pfam Ratio"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none",
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
+```
+
+### Observation: the plot is consistent with oxygen levels. Atratus and robustus have the lowest and consistent ratios. Huntii and vosnesenskii have the highest ratios and variability. 
+
+```{r}
+model_ratio_species <- aov(ratio ~ species_id, data = metadata %>%
+  filter(!is.na(ratio), !is.na(species_id)) %>%
+  group_by(species_id) %>%
+  filter(n() >= 3) %>%
+  ungroup())
+
+summary(model_ratio_species)
+TukeyHSD(model_ratio_species)
+```
+```{r}
+model_ratio_subgenus <- aov(ratio ~ subgenus, data = metadata %>%
+  filter(!is.na(ratio), !is.na(subgenus)))
+
+summary(model_ratio_subgenus)
+TukeyHSD(model_ratio_subgenus)
+```
+### Concern: The p-value is just above the 5% level (p=0.0642). The raw pfam ratio does not differ significantly by species. Also, the raw pfam ratio does not differ by subgenra (p=0.785). Maybe oxymetag uses not just the raw pfam ratio to calculate oxygen level. 
+
+## 4. Boxplot of queens vs workers/caste (male/female) *intraspecies (facet by species)*
+
+Identify species with both workers and queens: 
+```{r}
+metadata %>%
+  count(caste)
+metadata %>%
+  filter(caste %in% c("queen", "worker")) %>%
+  group_by(species_id, caste) %>%
+  summarise(n = n()) %>%
+  pivot_wider(names_from = caste, values_from = n) %>%
+  filter(!is.na(queen) & !is.na(worker))
+```
+```{r}
+metadata %>%
+  filter(caste %in% c("queen", "worker"),
+         species_id %in% c("flavifrons_flavifrons", "huntii")) %>%
+  ggplot(aes(x = caste, y = Oxygen_level, color = caste)) +
+  sm_boxplot() +
+  facet_wrap(~species_id) +
+  labs(
+    title = "Oxygen Level by Caste within Species",
+    x = "Caste",
+    y = "Oxygen Level (%)"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  )
+```
+### Observation: Flavifron queens have oxygen levels labeled as NAs. Only huntii produced visualizable results. Sample size is small, but queens have higher oxygen levels compared to workers.
+
+T-test for differences:
+```{r}
+t.test(Oxygen_level ~ caste, data = metadata %>%
+  filter(species_id == "huntii", caste %in% c("queen", "worker")))
+```
+### Conculsion: Queen bumblebees have more aerobic gut microbiomes than workers for the species Huntii (p=0.003)!
